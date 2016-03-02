@@ -23,7 +23,7 @@ class SwipeCards extends Component {
     this.state = {
       pan: new Animated.ValueXY(),
       enter: new Animated.Value(1),
-      nextCardOpacity: new Animated.Value(1),
+      nextCardOpacity: new Animated.Value(0),
       currentPerson: Persons[0],
       nextPerson: Persons[1],
       isUserDragging: false,
@@ -46,9 +46,9 @@ class SwipeCards extends Component {
   }
 
   _animateEntrance() {
-    // Animated.timing(this.state.nextCardOpacity, {
-    //          toValue: 1,
-    //    }).start()
+    Animated.timing(this.state.nextCardOpacity, {
+             toValue: 1,
+       }).start()
   }
 
   componentWillMount() {
@@ -133,6 +133,8 @@ class SwipeCards extends Component {
 
     let nopeOpacity = pan.x.interpolate({inputRange: [-150, 0], outputRange: [1, 0]});
     let animatedNopeStyles = {opacity: nopeOpacity}
+
+    console.log(this.state.nextCardOpacity);
 
     return (
       <View style={styles.container}>
