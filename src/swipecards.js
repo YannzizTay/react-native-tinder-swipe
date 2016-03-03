@@ -138,15 +138,22 @@ class SwipeCards extends Component {
       <View style={styles.container}>
         <View style={styles.cardsContainer}>
 
-          <Animated.View style={[styles.nextCard, styles.card, {opacity: this.state.nextCardOpacity}]}>
-            <Image source={{uri: this.state.nextPerson.image}} style={styles.cardImage} />
-              <View style={styles.cardLabelContainer}>
-                <Text style={styles.name}>{this.state.nextPerson.name}</Text>
-                <Text style={styles.value}>55$</Text>
-              </View>
+          <Animated.View key={this.state.nextPerson.name} style={[styles.card]}>
+            <Image source={{uri: this.state.nextPerson.image}} style={styles.cardImage}>
+              <Animated.View style={[styles.cardYupContainer]}>
+                <Text style={styles.cardYupText}>LOVE</Text>
+              </Animated.View>
+              <Animated.View style={[styles.cardNopeContainer]}>
+                <Text style={styles.cardNopeText}>NEIN</Text>
+              </Animated.View>
+            </Image>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.name}>{this.state.nextPerson.name}</Text>
+              <Text style={styles.value}>100$</Text>
+            </View>
           </Animated.View>
 
-          <Animated.View style={[styles.card, animatedCardStyles]} {...this._panResponder.panHandlers}>
+          <Animated.View key={this.state.currentPerson.name} style={[styles.card, animatedCardStyles]} {...this._panResponder.panHandlers}>
             <Image source={{uri: this.state.currentPerson.image}} style={styles.cardImage}>
               <Animated.View style={[styles.cardYupContainer, animatedYupStyles]}>
                 <Text style={styles.cardYupText}>LOVE</Text>
@@ -189,6 +196,8 @@ var styles = StyleSheet.create({
   },
   cardsContainer: {
     marginTop: 10,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
   },
 
   card: {
@@ -201,6 +210,9 @@ var styles = StyleSheet.create({
     //shadowRadius: 1
     overflow: 'hidden', // TODO: Work out why image is overflowing div
     borderRadius: 8,
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   cardImage: {
     width: CARD_WIDTH - 4,  // TODO: Work out why image is overflowing div
@@ -225,6 +237,7 @@ var styles = StyleSheet.create({
     paddingLeft: 6,
     paddingRight: 6,
     borderRadius: 4,
+    opacity: 0,
   },
   cardNopeContainer : {
     position: 'absolute',
@@ -238,6 +251,7 @@ var styles = StyleSheet.create({
     paddingLeft: 6,
     paddingRight: 6,
     borderRadius: 4,
+    opacity: 0,
   },
   cardNopeText: {
     fontSize: 40,
