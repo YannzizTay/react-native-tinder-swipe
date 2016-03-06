@@ -11,10 +11,8 @@ const Persons = [
   {name: 'Me', image: 'https://avatars0.githubusercontent.com/u/1843898?v=3&s=460'}
 ]
 
+// The card area expands to take up the space not used but the button area
 var SWIPE_THRESHOLD = 120;
-var CARD_WIDTH = 310
-var CARD_HEIGHT = 400
-var CARD_LABEL_SIZE = 40
 
 class SwipeCards extends Component {
   constructor(props) {
@@ -134,214 +132,196 @@ class SwipeCards extends Component {
     let nopeOpacity = pan.x.interpolate({inputRange: [-150, 0], outputRange: [1, 0]});
     let animatedNopeStyles = {opacity: nopeOpacity}
 
+    // the rendering here is quite tricky. it was tricky getting all three correct at the same time . . .
+
+    // 1. the card should always appear on top when being dragged so needs to be rendered near the end 
+    // (at least after the buttons)
+    // 2. the layout should be responsive
+    // 3. the buttons need to work ofc - we have to be careful about rendering a view on top of them
+
     return (
-      <View style={styles.container}>
-        <View style={styles.cardsContainer}>
+      <View style={styles.bodyContainer}>
+        <View style={styles.responsiveContainer}>
 
-          <Animated.View key={this.state.nextPerson.name} style={[styles.card]}>
-            <Image source={{uri: this.state.nextPerson.image}} style={styles.cardImage}>
-              <Animated.View style={[styles.cardYupContainer]}>
-                <Text style={styles.cardYupText}>LOVE</Text>
-              </Animated.View>
-              <Animated.View style={[styles.cardNopeContainer]}>
-                <Text style={styles.cardNopeText}>NEIN</Text>
-              </Animated.View>
-            </Image>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.name}>{this.state.nextPerson.name}</Text>
-              <Text style={styles.value}>100$</Text>
+          <View style={styles.buttonsContainer}>
+            <View style={styles.buttonContainer}>
+              <TouchableHighlight style={[styles.button, styles.buttonNope]} onPress={() => {this.handleNopePress()}}>
+                  <Text style={styles.nopeText}>Nein!</Text>
+              </TouchableHighlight>
             </View>
-          </Animated.View>
-
-          <Animated.View key={this.state.currentPerson.name} style={[styles.card, animatedCardStyles]} {...this._panResponder.panHandlers}>
-            <Image source={{uri: this.state.currentPerson.image}} style={styles.cardImage}>
-              <Animated.View style={[styles.cardYupContainer, animatedYupStyles]}>
-                <Text style={styles.cardYupText}>LOVE</Text>
-              </Animated.View>
-              <Animated.View style={[styles.cardNopeContainer, animatedNopeStyles]}>
-                <Text style={styles.cardNopeText}>NEIN</Text>
-              </Animated.View>
-            </Image>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.name}>{this.state.currentPerson.name}</Text>
-              <Text style={styles.value}>100$</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableHighlight style={[styles.button, styles.buttonYup]} onPress={() => {this.handleYupPress()}}>
+                  <Text style={styles.yupText}>Love!</Text>
+              </TouchableHighlight>
             </View>
-          </Animated.View>
-        </View>
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <View style={styles.buttonNopeContainer}>
-            <TouchableHighlight style={styles.buttonNope} onPress={() => {this.handleNopePress()}}>
-                <Text style={styles.nopeText}>Nope!</Text>
-            </TouchableHighlight>
+          <View style={styles.cardsContainer}>
+            <Animated.View key={this.state.nextPerson.name} style={[styles.card]}>
+              <Image source={{uri: this.state.nextPerson.image}} style={styles.cardImage}>
+                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer]}>
+                  <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
+                </Animated.View>
+                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer]}>
+                  <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
+                </Animated.View>
+              </Image>
+              <View style={styles.cardLabelContainer}>
+                <Text style={styles.name}>{this.state.nextPerson.name}</Text>
+                <Text style={styles.value}>100$</Text>
+              </View>
+            </Animated.View>
+            <Animated.View key={this.state.currentPerson.name} style={[styles.card, animatedCardStyles]} {...this._panResponder.panHandlers}>
+              <Image source={{uri: this.state.currentPerson.image}} style={styles.cardImage}>
+                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, animatedYupStyles]}>
+                  <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
+                </Animated.View>
+                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, animatedNopeStyles]}>
+                  <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
+                </Animated.View>
+              </Image>
+              <View style={styles.cardLabelContainer}>
+                <Text style={styles.name}>{this.state.currentPerson.name}</Text>
+                <Text style={styles.value}>100$</Text>
+              </View>
+            </Animated.View>
           </View>
-          <View style={styles.buttonYupContainer}>
-            <TouchableHighlight style={styles.buttonYup} onPress={() => {this.handleYupPress()}}>
-                <Text style={styles.yupText}>Yup!</Text>
-            </TouchableHighlight>
-          </View>
-        </View>
-        
+
+        </View>   
       </View>
     );
   }
 }
 
 var styles = StyleSheet.create({
-  container: {
+  // main container
+  bodyContainer: {
     flex: 1,
-    //justifyContent: 'center',
-    alignItems: 'center',
+    margin: 10,
     backgroundColor: '#F5FCFF',
   },
+
+  // we keep the bottom button sections at height 100
+  // the card expands to take up all the rest of the space
+  responsiveContainer: {
+    flex: 1,
+    paddingBottom: 100,
+  },
+
+  // cards
   cardsContainer: {
-    marginTop: 10,
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    flex: 1,
   },
 
   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    position: 'absolute',
     borderColor: '#AAA',
     borderWidth: 2,
-    //borderRadius: 3,
-    //shadowOpacity: 0.1,
-    //shadowRadius: 1
-    overflow: 'hidden', // TODO: Work out why image is overflowing div
     borderRadius: 8,
     position: 'absolute',
     top: 0,
     left: 0,
+    bottom: 0, 
+    right: 0,
   },
+
   cardImage: {
-    width: CARD_WIDTH - 4,  // TODO: Work out why image is overflowing div
-    height: CARD_HEIGHT - CARD_LABEL_SIZE,
+    flex: 1,
     borderRadius: 4,
-    //borderTopLeftRadius: 4,
-    //borderTopRightRadius: 4,
   },
-  nextCard: {
+
+  cardImageTextContainer: {
     position: 'absolute',
-    top: 0,
+    borderWidth: 3,
+    paddingTop: 2,
+    paddingBottom: 2,
+    paddingLeft: 6,
+    paddingRight: 6,
+    borderRadius: 4,
+    opacity: 0,
   },
-  cardYupContainer : {
-    position: 'absolute',
+  cardImageYupContainer : {
     top: 40,
     left: 40,
     transform:[{rotate: '-20deg'}],
     borderColor: 'green',
-    borderWidth: 3,
-    paddingTop: 2,
-    paddingBottom: 2,
-    paddingLeft: 6,
-    paddingRight: 6,
-    borderRadius: 4,
-    opacity: 0,
+    
   },
-  cardNopeContainer : {
-    position: 'absolute',
+  cardImageNopeContainer : {
     top: 40,
     right: 40,
     transform:[{rotate: '20deg'}],
     borderColor: 'red',
-    borderWidth: 3,
-    paddingTop: 2,
-    paddingBottom: 2,
-    paddingLeft: 6,
-    paddingRight: 6,
-    borderRadius: 4,
-    opacity: 0,
   },
-  cardNopeText: {
+  cardImageText: {
     fontSize: 40,
-    color: 'red',
-    backgroundColor: 'rgba(0,0,0,0)',
     fontWeight: 'bold',
   },
-  cardYupText: {
-    fontSize: 40,
+  cardImageNopeText: {
+    color: 'red',
+    backgroundColor: 'rgba(0,0,0,0)', 
+  },
+  cardImageYupText: {
     color: 'green',
     backgroundColor: 'rgba(0,0,0,0)',
-    fontWeight: 'bold',
   },
+
   cardLabelContainer: {
     backgroundColor: 'white',
     flexDirection: 'row',
-    height: CARD_LABEL_SIZE - 4,
-    justifyContent: 'center',
+    height: 40,
+    alignItems: 'center',
     borderColor: "#999",
     borderRadius: 4,
     borderBottomWidth: 2,
+    padding: 8,
   },
   name: {
-    marginLeft: 8,
-    marginTop: 8,
     fontWeight: 'bold',
     color: '#999',
-    //position: 'absolute',
-    //left:8,
-    //top:8,
   },
   value: {
     flex: 1,
     textAlign: 'right',
-    marginTop: 8,
-    marginRight: 8,
     fontWeight: 'bold',
     color: '#999',
-    //position: 'absolute',
-    //right: 8,
-    //top: 8,
   },
-
+  
   // buttons
+
+  buttonsContainer: {
+    height:100,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   buttonContainer: {
-    height: 60,
-    width: CARD_WIDTH,
-    //width: CARD_WIDTH,
-    //flexDirection: 'row',
-    //alignItems: 'flex-start',
+    flex: 1,
+    alignItems: 'center',
   },
-  buttonNopeContainer: {
-  },
-  buttonYupContainer: {
-    //flex: 1,
-    
+  button: {
+    borderWidth: 2,
+    padding: 8,
+    borderRadius: 5,
   },
   buttonNope: {
     borderColor: 'red',
-    borderWidth: 2,
-    padding: 8,
-    borderRadius: 5,
-    position: 'absolute', // TODO learn how to use flexbox properly
-    top: 10,
-    left: 10,
-    width: 80,
-    alignItems: 'center',
   },
   buttonYup: {
     borderColor: 'green',
-    borderWidth: 2,
-    padding: 8,
-    borderRadius: 5,
-    position: 'absolute', // TODO learn how to use flexbox properly
-    top: 10,
-    right: 10,
-    width: 80,
-    alignItems: 'center',
   },
   yupText: {
     fontSize: 20,
     color: 'green',
-    backgroundColor: 'rgba(0,0,0,0)',
   },
   nopeText: {
     fontSize: 20,
     color: 'red',
-    backgroundColor: 'rgba(0,0,0,0)',
-
   },
+
 });
 
 

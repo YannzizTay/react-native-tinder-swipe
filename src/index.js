@@ -8,7 +8,8 @@ import React, {
   Component,
   StyleSheet,
   Text,
-  View
+  View,
+  Platform,
 } from 'react-native';
 
 import Header from './header';
@@ -16,22 +17,23 @@ import SwipeCards from './swipecards';
 
 function Init() {
 
+  // on IOS the window draws over the stats bar
+  const windowMarginTop = (Platform.OS === 'ios') ? 24 : 0;
+
   class ReactNativeTinderSwipe extends Component {
     render() {
       return (
-        <View style={styles.container}>
-          <View style={styles.container}>
-              <Header/>
-              <SwipeCards/>
-            </View>
+        <View style={styles.viewPortContainer}>
+          <Header/>
+          <SwipeCards/>
         </View>
       );
     }
   }
 
   const styles = StyleSheet.create({
-    container: {
-      marginTop: 24,
+    viewPortContainer: {
+      marginTop: windowMarginTop,
       flex: 1,
     },
   });
