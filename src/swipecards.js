@@ -8,29 +8,35 @@ const Persons = [
   {name: 'Barrack Obama', image: 'https://pbs.twimg.com/profile_images/451007105391022080/iu1f7brY_400x400.png'},
   {name: 'Albert Einstein', image: 'http://www.deism.com/images/Einstein_laughing.jpeg'},
   {name: 'The Beast', image: 'http://vignette2.wikia.nocookie.net/marveldatabase/images/4/43/Henry_McCoy_(Earth-10005)_0002.jpg/revision/latest?cb=20091116202257'},
-  {name: 'Me', image: 'https://avatars0.githubusercontent.com/u/1843898?v=3&s=460'}
+  {name: 'Me', image: 'https://avatars0.githubusercontent.com/u/1843898?v=3&s=460'},
+  {name: 'HellBoy', image: 'http://www.flickeringmyth.com/wp-content/uploads/2014/06/Ron-Perlman-as-Hellboy.jpg'}
 ]
 
-// The card area expands to take up the space not used but the button area
+// How far the swipe need to go for a yes/ no to fire
 var SWIPE_THRESHOLD = 120;
+// To get the stack effect the lower card must pick out at the bottom and appear smaller
+var NEXT_CARD_POSITION_OFFSET = 4;
+var NEXT_CARD_SIZE_OFFSET = 8;
 
 class Card extends Component {
   render() {
     return (
-      <Animated.View style={[styles.card, this.props.animatedCardStyles]} {...this.props.panResponder}>
-        <Image source={{uri: this.props.image}} style={styles.cardImage}>
-          <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, this.props.animatedYupStyles]}>
-            <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
-          </Animated.View>
-          <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, this.props.animatedNopeStyles]}>
-            <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
-          </Animated.View>
-        </Image>
-        <View style={styles.cardLabelContainer}>
-          <Text style={styles.name}>{this.props.name}</Text>
-          <Text style={styles.value}>100$</Text>
-        </View>
-      </Animated.View>   
+      <Animated.View style={[styles.cardContainer, this.props.animatedCardContainerStyles]}>
+        <Animated.View style={[styles.card, this.props.animatedCardStyles]} {...this.props.panResponder}>
+          <Image source={{uri: this.props.image}} style={styles.cardImage}>
+            <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, this.props.animatedYupStyles]}>
+              <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
+            </Animated.View>
+            <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, this.props.animatedNopeStyles]}>
+              <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
+            </Animated.View>
+          </Image>
+          <View style={styles.cardLabelContainer}>
+            <Text style={styles.name}>{this.props.name}</Text>
+            <Text style={styles.value}>100$</Text>
+          </View>
+        </Animated.View>   
+      </Animated.View>
     );
   }
 }
@@ -41,23 +47,15 @@ class SwipeCards extends Component {
 
     this.state = {
       pan: new Animated.ValueXY(),
-      enter: new Animated.Value(1),
-      nextCardOpacity: new Animated.Value(1),
-      currentPerson: Persons[0],
-      nextPerson: Persons[1],
-      isUserDragging: false,
+      cards: Persons,
+      currentPosition: 0,
     }
   }
 
+  // we use a circular queue
   _goToNextPerson() {
-    let currentPersonIdx = Persons.indexOf(this.state.currentPerson);
-    let newIdx = (currentPersonIdx + 1) > Persons.length - 1 ? 0 : (currentPersonIdx + 1);
-    let nextPersonIdx = (newIdx + 1) > Persons.length - 1 ? 0 : (newIdx + 1)
-
-    this.setState({
-      currentPerson: Persons[newIdx],
-      nextPerson: Persons[nextPersonIdx]
-    });
+    let nextPosition = (this.state.currentPosition + 1) % this.state.cards.length
+    this.setState({currentPosition: nextPosition});
   }
 
   componentDidMount() {
@@ -78,7 +76,6 @@ class SwipeCards extends Component {
       onPanResponderGrant: (e, gestureState) => {
         this.state.pan.setOffset({x: this.state.pan.x._value, y: this.state.pan.y._value});
         this.state.pan.setValue({x: 0, y: 0});
-        this.state.isUserDragging = true;
       },
 
       onPanResponderMove: Animated.event([
@@ -86,8 +83,6 @@ class SwipeCards extends Component {
       ]),
 
       onPanResponderRelease: (e, {vx, vy}) => {
-        console.log('release');
-        this.state.isUserDragging = false;
         this.state.pan.flattenOffset();
         var velocity;
 
@@ -114,9 +109,7 @@ class SwipeCards extends Component {
 
   _resetState() {
     this.state.pan.setValue({x: 0, y: 0});
-    //this.state.enter.setValue(0);
     this._goToNextPerson();
-    //this._animateEntrance();
   }
 
   handleNopePress() {
@@ -138,33 +131,65 @@ class SwipeCards extends Component {
   }
 
   render() {
-    let { pan, enter, } = this.state;
+    let { pan, cards, currentPosition} = this.state;
 
     let [translateX, translateY] = [pan.x, pan.y];
 
-    let rotate = pan.x.interpolate({inputRange: [-200, 0, 200], outputRange: ["-30deg", "0deg", "30deg"]});
-    let scale = enter;
+    // card 0 animation
+    let rotate = pan.x.interpolate({inputRange: [-240, 0, 240], outputRange: ["-30deg", "0deg", "30deg"]});
 
-    let animatedCardStyles = {transform: [{translateX}, {translateY}, {rotate}, {scale}]};
+    let animatedCardStyles = {transform: [{translateX}, {translateY}, {rotate}]};
 
-    let yupOpacity = pan.x.interpolate({inputRange: [0, 150], outputRange: [0, 1]});
+    let yupOpacity = pan.x.interpolate({inputRange: [0, SWIPE_THRESHOLD], outputRange: [0, 1], extrapolate: 'clamp'});
     let animatedYupStyles = {opacity: yupOpacity}
 
-    let nopeOpacity = pan.x.interpolate({inputRange: [-150, 0], outputRange: [1, 0]});
+    let nopeOpacity = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0], outputRange: [1, 0], extrapolate: 'clamp'});
     let animatedNopeStyles = {opacity: nopeOpacity}
 
-    let currentCardAnimatedStyles = {
+    let card0AnimatedStyles = {
       animatedCardStyles: animatedCardStyles, 
       animatedNopeStyles: animatedNopeStyles,
       animatedYupStyles: animatedYupStyles
     }
 
-    // the rendering here is quite tricky. it was tricky getting all three correct at the same time . . .
+    // card 1 animation
+    let card1BottomTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [0, -NEXT_CARD_POSITION_OFFSET, 0], extrapolate: 'clamp'});
+    let card1SideTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [0, NEXT_CARD_SIZE_OFFSET, 0], extrapolate: 'clamp'});
+    let card1TopTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [0, NEXT_CARD_POSITION_OFFSET+NEXT_CARD_SIZE_OFFSET, 0], extrapolate: 'clamp'});
+    let card1TranslationStyles = {top: card1TopTranslation, bottom: card1BottomTranslation, right: card1SideTranslation, left: card1SideTranslation}
+    let card1AnimatedStyles = {
+      animatedCardContainerStyles: card1TranslationStyles
+    }
+
+    // card 2 animation
+    let card2BottomTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [-NEXT_CARD_POSITION_OFFSET, -NEXT_CARD_POSITION_OFFSET*2, -NEXT_CARD_POSITION_OFFSET], extrapolate: 'clamp'});
+    let card2SideTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [NEXT_CARD_SIZE_OFFSET, NEXT_CARD_SIZE_OFFSET*2, NEXT_CARD_SIZE_OFFSET], extrapolate: 'clamp'});
+    let card2TopTranslation = pan.x.interpolate({inputRange: [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], outputRange: [NEXT_CARD_POSITION_OFFSET+NEXT_CARD_SIZE_OFFSET, (NEXT_CARD_POSITION_OFFSET+NEXT_CARD_SIZE_OFFSET)*2, NEXT_CARD_POSITION_OFFSET+NEXT_CARD_SIZE_OFFSET], extrapolate: 'clamp'});
+    let card2TranslationStyles = {top: card2TopTranslation, bottom: card2BottomTranslation, right: card2SideTranslation, left: card2SideTranslation}
+    let card2AnimatedStyles = {
+      animatedCardContainerStyles: card2TranslationStyles
+    }
+
+    let card3AnimatedStyles = {
+      animatedCardContainerStyles: {top: (NEXT_CARD_POSITION_OFFSET+NEXT_CARD_SIZE_OFFSET)*2, bottom: -NEXT_CARD_POSITION_OFFSET*2, right: NEXT_CARD_SIZE_OFFSET*2, left: NEXT_CARD_SIZE_OFFSET*2}
+    }
+
+
+    let person0 = cards[currentPosition]
+    let person1 = cards[(currentPosition+1) % cards.length]
+    let person2 = cards[(currentPosition+2) % cards.length]
+    let person3 = cards[(currentPosition+3) % cards.length]
+
+    // if the layout appears a little strange. it was born out of the trickiness in doing the following
+    // at the same time ...
 
     // 1. the card should always appear on top when being dragged so needs to be rendered near the end 
     // (at least after the buttons)
     // 2. the layout should be responsive
     // 3. the buttons need to work ofc - we have to be careful about rendering a view on top of them
+
+    // also note that we render 4 cards for the 'stack' effect. while dragging 3 cards appear under 
+    // (but only 2 cards at pan=0)
 
     return (
       <View style={styles.bodyContainer}>
@@ -184,8 +209,10 @@ class SwipeCards extends Component {
           </View>
 
           <View style={styles.cardsContainer}>
-            <Card key={this.state.nextPerson.name} {...this.state.nextPerson} />
-            <Card key={this.state.currentPerson.name} {...this.state.currentPerson} {...currentCardAnimatedStyles} panResponder={this._panResponder.panHandlers}/>
+            <Card key={person3.name} {...person2} {...card3AnimatedStyles}/>
+            <Card key={person2.name} {...person2} {...card2AnimatedStyles}/>
+            <Card key={person1.name} {...person1} {...card1AnimatedStyles} />
+            <Card key={person0.name} {...person0} {...card0AnimatedStyles} panResponder={this._panResponder.panHandlers}/>
           </View>
 
         </View>   
@@ -214,15 +241,22 @@ var styles = StyleSheet.create({
     flex: 1,
   },
 
-  card: {
+  cardContainer: {
     position: 'absolute',
-    borderColor: '#AAA',
-    borderWidth: 2,
-    borderRadius: 8,
     top: 0,
     left: 0,
     bottom: 0, 
     right: 0,
+    justifyContent: 'flex-end',
+  },
+
+  card: {   
+    position: 'relative',
+    borderColor: '#AAA',
+    borderWidth: 1,
+    borderRadius: 8,  
+    flex: 1,
+    //overflow: 'hidden',
   },
 
   cardImage: {
@@ -271,9 +305,9 @@ var styles = StyleSheet.create({
     flexDirection: 'row',
     height: 40,
     alignItems: 'center',
-    borderColor: "#999",
-    borderRadius: 4,
-    borderBottomWidth: 2,
+    //borderColor: "#999",
+    borderRadius: 8,
+    //borderBottomWidth: 2,
     padding: 8,
   },
   name: {
