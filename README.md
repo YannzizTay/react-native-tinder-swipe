@@ -7,4 +7,4 @@ Added a card underneath, buttons to swipe left and right, and tinder-like yes/no
 
 (Note the the screen capture might be a bit out of date)
 
-![Screen Capeture](screen_capture/reacttinderscreencapture.gif "Screen Capture")
+![Screen Capeture](screen_capture/screencapture.gif "Screen Capture")
