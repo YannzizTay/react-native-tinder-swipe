@@ -14,6 +14,27 @@ const Persons = [
 // The card area expands to take up the space not used but the button area
 var SWIPE_THRESHOLD = 120;
 
+class Card extends Component {
+  render() {
+    return (
+      <Animated.View style={[styles.card, this.props.animatedCardStyles]} {...this.props.panResponder}>
+        <Image source={{uri: this.props.image}} style={styles.cardImage}>
+          <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, this.props.animatedYupStyles]}>
+            <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
+          </Animated.View>
+          <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, this.props.animatedNopeStyles]}>
+            <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
+          </Animated.View>
+        </Image>
+        <View style={styles.cardLabelContainer}>
+          <Text style={styles.name}>{this.props.name}</Text>
+          <Text style={styles.value}>100$</Text>
+        </View>
+      </Animated.View>   
+    );
+  }
+}
+
 class SwipeCards extends Component {
   constructor(props) {
     super(props);
@@ -132,6 +153,12 @@ class SwipeCards extends Component {
     let nopeOpacity = pan.x.interpolate({inputRange: [-150, 0], outputRange: [1, 0]});
     let animatedNopeStyles = {opacity: nopeOpacity}
 
+    let currentCardAnimatedStyles = {
+      animatedCardStyles: animatedCardStyles, 
+      animatedNopeStyles: animatedNopeStyles,
+      animatedYupStyles: animatedYupStyles
+    }
+
     // the rendering here is quite tricky. it was tricky getting all three correct at the same time . . .
 
     // 1. the card should always appear on top when being dragged so needs to be rendered near the end 
@@ -157,34 +184,8 @@ class SwipeCards extends Component {
           </View>
 
           <View style={styles.cardsContainer}>
-            <Animated.View key={this.state.nextPerson.name} style={[styles.card]}>
-              <Image source={{uri: this.state.nextPerson.image}} style={styles.cardImage}>
-                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer]}>
-                  <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
-                </Animated.View>
-                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer]}>
-                  <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
-                </Animated.View>
-              </Image>
-              <View style={styles.cardLabelContainer}>
-                <Text style={styles.name}>{this.state.nextPerson.name}</Text>
-                <Text style={styles.value}>100$</Text>
-              </View>
-            </Animated.View>
-            <Animated.View key={this.state.currentPerson.name} style={[styles.card, animatedCardStyles]} {...this._panResponder.panHandlers}>
-              <Image source={{uri: this.state.currentPerson.image}} style={styles.cardImage}>
-                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, animatedYupStyles]}>
-                  <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
-                </Animated.View>
-                <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, animatedNopeStyles]}>
-                  <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
-                </Animated.View>
-              </Image>
-              <View style={styles.cardLabelContainer}>
-                <Text style={styles.name}>{this.state.currentPerson.name}</Text>
-                <Text style={styles.value}>100$</Text>
-              </View>
-            </Animated.View>
+            <Card key={this.state.nextPerson.name} {...this.state.nextPerson} />
+            <Card key={this.state.currentPerson.name} {...this.state.currentPerson} {...currentCardAnimatedStyles} panResponder={this._panResponder.panHandlers}/>
           </View>
 
         </View>   
@@ -218,7 +219,6 @@ var styles = StyleSheet.create({
     borderColor: '#AAA',
     borderWidth: 2,
     borderRadius: 8,
-    position: 'absolute',
     top: 0,
     left: 0,
     bottom: 0, 
