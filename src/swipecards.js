@@ -21,22 +21,24 @@ var NEXT_CARD_SIZE_OFFSET = 8;
 class Card extends Component {
   render() {
     return (
-      <Animated.View style={[styles.cardContainer, this.props.animatedCardContainerStyles]}>
-        <Animated.View style={[styles.card, this.props.animatedCardStyles]} {...this.props.panResponder}>
-          <Image source={{uri: this.props.image}} style={styles.cardImage}>
-            <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, this.props.animatedYupStyles]}>
-              <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
-            </Animated.View>
-            <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, this.props.animatedNopeStyles]}>
-              <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
-            </Animated.View>
-          </Image>
-          <View style={styles.cardLabelContainer}>
-            <Text style={styles.name}>{this.props.name}</Text>
-            <Text style={styles.value}>100$</Text>
-          </View>
-        </Animated.View>   
-      </Animated.View>
+      <View style={styles.cardResizeContainer}>
+        <Animated.View style={[styles.cardContainer, this.props.animatedCardContainerStyles]}>
+          <Animated.View style={[styles.card, this.props.animatedCardStyles]} {...this.props.panResponder}>
+            <Image source={{uri: this.props.image}} style={styles.cardImage}>
+              <Animated.View style={[styles.cardImageTextContainer, styles.cardImageYupContainer, this.props.animatedYupStyles]}>
+                <Text style={[styles.cardImageText, styles.cardImageYupText]}>LOVE</Text>
+              </Animated.View>
+              <Animated.View style={[styles.cardImageTextContainer, styles.cardImageNopeContainer, this.props.animatedNopeStyles]}>
+                <Text style={[styles.cardImageText, styles.cardImageNopeText]}>NEIN</Text>
+              </Animated.View>
+            </Image>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.name}>{this.props.name}</Text>
+              <Text style={styles.value}>100$</Text>
+            </View>
+          </Animated.View>   
+        </Animated.View>
+      </View>
     );
   }
 }
@@ -197,12 +199,12 @@ class SwipeCards extends Component {
 
           <View style={styles.buttonsContainer}>
             <View style={styles.buttonContainer}>
-              <TouchableHighlight style={[styles.button, styles.buttonNope]} onPress={() => {this.handleNopePress()}}>
+              <TouchableHighlight style={[styles.button, styles.buttonNope]} underlayColor='#EEE' onPress={() => {this.handleNopePress()}}>
                   <Text style={styles.nopeText}>Nein!</Text>
               </TouchableHighlight>
             </View>
             <View style={styles.buttonContainer}>
-              <TouchableHighlight style={[styles.button, styles.buttonYup]} onPress={() => {this.handleYupPress()}}>
+              <TouchableHighlight style={[styles.button, styles.buttonYup]} underlayColor='#EEE' onPress={() => {this.handleYupPress()}}>
                   <Text style={styles.yupText}>Love!</Text>
               </TouchableHighlight>
             </View>
@@ -225,7 +227,7 @@ var styles = StyleSheet.create({
   // main container
   bodyContainer: {
     flex: 1,
-    margin: 10,
+    //margin: 10,
     backgroundColor: '#F5FCFF',
   },
 
@@ -239,6 +241,15 @@ var styles = StyleSheet.create({
   // cards
   cardsContainer: {
     flex: 1,
+  },
+
+  cardResizeContainer: {
+    flex: 1,
+    position: 'absolute',
+    top: 40,
+    left: 40,
+    bottom: 40, 
+    right: 40,
   },
 
   cardContainer: {
@@ -257,11 +268,18 @@ var styles = StyleSheet.create({
     borderRadius: 8,  
     flex: 1,
     //overflow: 'hidden',
+    shadowRadius: 2,
+    shadowColor: '#BBB',
+    shadowOpacity: 0.8,
+    shadowOffset: {
+      height: 1,
+      width: 0,
+    }
   },
 
   cardImage: {
     flex: 1,
-    borderRadius: 4,
+    borderRadius: 8,
   },
 
   cardImageTextContainer: {
