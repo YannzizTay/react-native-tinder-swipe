@@ -1,6 +1,7 @@
 'use strict';
 
-import React, { AppRegistry, StyleSheet, Text, View, Animated, Component, PanResponder, Image, TouchableHighlight} from 'react-native';
+import React,{Component} from 'react
+import { AppRegistry, StyleSheet, Text, View, Animated, PanResponder, Image, TouchableHighlight} from 'react-native';
 import clamp from 'clamp';
 import Dimensions from 'Dimensions';
 
